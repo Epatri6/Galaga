@@ -34,6 +34,7 @@ public class EnemyIdle : MonoBehaviour
         data = GetComponent<Enemy>();
         rb = GetComponent<Rigidbody2D>();
         data.AddStateChangedListener(SetStart);
+        startPos = transform.position.x;
     }
 
     /**
@@ -52,7 +53,7 @@ public class EnemyIdle : MonoBehaviour
         if(data.ActionState != Enemy.Action_State.IDLE) {
             return;
         }
-        rb.MovePosition(new Vector2(startPos - offset + (Mathf.PingPong(Time.time, offset * 2) / 5.0f), rb.transform.position.y));
+        rb.MovePosition(new Vector2(startPos - offset + (Mathf.PingPong(Time.time, offset * 2)), rb.transform.position.y));
     }
 
     /**

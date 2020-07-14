@@ -47,9 +47,11 @@ public class Enemy : MonoBehaviour {
     public void AddStateChangedListener(UnityAction action) { actionStateChanged.AddListener(action); }
     public void DeleteStateChangedListener(UnityAction action) { actionStateChanged.RemoveListener(action); }
 
+    private bool attacking = false;
     private void Update() {
-        if(Time.time > 5.0f) {
+        if(Time.time > 5.0f && !attacking) {
             ActionState = Action_State.ATTACKING;
+            attacking = true;
         }
     }
 }
