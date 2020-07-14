@@ -12,49 +12,18 @@ public class WavyEnemyMovement : MonoBehaviour
     private Rigidbody2D rb = null;
 
     /**
-     * Fire missile script
-     */
-    private EnemyFireMissile missile = null;
-
-    /**
-     * Max chance to fire missile
-     */
-    private float maxChance = 0.5f;
-
-    /**
-     * Min chance to fire missile
-     */
-    private float minChance = 0.1f;
-
-    /**
-     * Current chance
-     */
-    private float currChance = 0.5f;
-
-    /**
-     * Time between shots
-     */
-    private float cooldown = 1.0f;
-
-    /**
-     * Time of last shot
-     */
-    private float timeLastShot = 0.0f;
-
-    /**
-     * Enemy speed
-     */
-    [SerializeField]
-    private float speed = 0.0f;
-
-    /**
      * How fast it curves
      */
     [SerializeField]
     private float rotationFactor = 1.0f;
 
     /**
-     * Sound for moving
+     * Enemy data
+     */
+    private Enemy data = null;
+
+    /**
+     * Movement sound
      */
     [SerializeField]
     private AudioSource sound = null;
@@ -64,10 +33,17 @@ public class WavyEnemyMovement : MonoBehaviour
      */
     private void Start() {
         rb = GetComponent<Rigidbody2D>();
-        missile = GetComponent<EnemyFireMissile>();
+        data = GetComponent<Enemy>();
+        data.AddStateChangedListener(PlaySound);
     }
 
-    private void Awake() {
+    /**
+     * Plays sound
+     */
+     public void PlaySound() {
+        if(data.ActionState != Enemy.Action_State.ATTACKING) {
+            return;
+        }
         sound.Play();
     }
 
@@ -75,25 +51,29 @@ public class WavyEnemyMovement : MonoBehaviour
      * Rotate and move
      */
     private void FixedUpdate() {
-        rb.rotation = 270.0f + (Mathf.Sin(Time.time * rotationFactor) * 60.0f);
-        rb.velocity = speed * rb.transform.right;
-        if(Time.time - timeLastShot > cooldown) {
-            float newChance = 0.0f;
-            if(Random.Range(0.0f, 1.0f) < currChance) {
-                missile.Fire();
-                newChance = currChance / 3.0f;
-            }
-            else {
-                newChance = currChance * 2.0f;
-            }
-            currChance = Mathf.Clamp(newChance, minChance, maxChance);
-            timeLastShot = Time.time;
+
+        //must be attacking
+        if(data.ActionState != Enemy.Action_State.ATTACKING) {
+            return;
         }
+
+        //Calculate wave pattern
+        rb.rotation = 270.0f + (Mathf.Sin(Time.time * rotationFactor) * 60.0f);
+        rb.velocity = data.Speed * rb.transform.right;
+
+        //Wrap when going off screen
         if(transform.position.y + 0.5f < ScreenUtils.ScreenBottom) {
             transform.position = new Vector2(transform.position.x, ScreenUtils.ScreenTop + (0.2f * ScreenUtils.ScreenHieght));
         }
         if(Mathf.Abs(transform.position.x) - 0.5f > ScreenUtils.ScreenRight) {
-            transform.position = new Vector2(-transform.position.x, transform.position.y);
+            transform.position = new Vector2(Mathf.Clamp(-transform.position.x, ScreenUtils.ScreenLeft - 0.4f, ScreenUtils.ScreenRight + 0.4f), transform.position.y);
         }
+    }
+
+    /**
+     * Remove listener when destroyed
+     */
+    private void OnDestroy() {
+        data.DeleteStateChangedListener(PlaySound);
     }
 }

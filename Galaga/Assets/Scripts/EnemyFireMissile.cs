@@ -19,6 +19,26 @@ public class EnemyFireMissile : MonoBehaviour
     private AudioSource sound = null;
 
     /**
+    * Max chance to fire missile
+    */
+    private float maxChance = 0.5f;
+
+    /**
+     * Min chance to fire missile
+     */
+    private float minChance = 0.1f;
+
+    /**
+     * Current chance
+     */
+    private float currChance = 0.5f;
+
+    /**
+     * Time of last shot
+     */
+    private float timeLastShot = 0.0f;
+
+    /**
      * Threshold distance from player at which we don't allow shooting
      */
     private const float threshold = 0.5f;
@@ -33,11 +53,36 @@ public class EnemyFireMissile : MonoBehaviour
      */
     private const float maxAngle = 280.0f;
 
-    float timelastshot = 0.0f;
-    private void Update() {
-        if(Time.time - timelastshot > 1.0f) {
-            Fire();
-            timelastshot = Time.time;
+    /**
+     * Enemy data
+     */
+    private Enemy data = null;
+
+    /**
+     * Setup
+     */
+    private void Start() {
+        data = GetComponent<Enemy>();
+    }
+
+    /**
+     * Check to fire missiles
+     */
+    private void FixedUpdate() {
+        if(data.ActionState != Enemy.Action_State.ATTACKING) {
+            return;
+        }
+        if(Time.time - timeLastShot > data.FiringCooldown) {
+            float newChance = 0.0f;
+            if(Random.Range(0.0f, 1.0f) < currChance) {
+                Fire();
+                newChance = currChance / 3.0f;
+            }
+            else {
+                newChance = currChance * 2.0f;
+            }
+            currChance = Mathf.Clamp(newChance, minChance, maxChance);
+            timeLastShot = Time.time;
         }
     }
 
